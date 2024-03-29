@@ -1,0 +1,19 @@
+class Patient:
+  def __init__(self, id, name, medical_history, current_condition):
+      self.id = id
+      self.name = name
+      self.medical_history = medical_history
+      self.current_condition = current_condition
+
+class Doctor:
+  def __init__(self, id, name, specialty):
+      self.id = id
+      self.name = name
+      self.specialty = specialty
+
+class Prescription:
+  def __init__(self, patient_id, doctor_id, medication, dosage):
+      self.patient_id = patient_id
+      self.doctor_id = doctor_id
+      self.medication = medication
+      self.dosage = dosage
