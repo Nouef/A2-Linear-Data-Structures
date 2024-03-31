@@ -38,3 +38,24 @@ class HospitalSystem:
               setattr(self.patients[patient_id], attribute, value)
       else:
           print(f"No patient found with ID {patient_id}")
+ def remove_patient(self, patient_id):
+      if patient_id in self.patients:
+          del self.patients[patient_id]
+      else:
+          print(f"No patient found with ID {patient_id}")
+
+  def schedule_appointment(self, appointment):
+      self.appointments.append(appointment)
+
+  def issue_prescription(self, prescription):
+      self.prescriptions.append(prescription)
+
+  def search_patient(self, patient_id):
+      if patient_id in self.patients:
+          patient = self.patients[patient_id]
+          print(f"Patient ID: {patient.id}, Name: {patient.name}, Medical History: {patient.medical_history}, Current Condition: {patient.current_condition}")
+          prescriptions = [p for p in self.prescriptions if p.patient_id == patient_id]
+          for p in prescriptions:
+              print(f"Prescribed: {p.medication}, Dosage: {p.dosage}")
+      else:
+          print("Patient not found.")
