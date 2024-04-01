@@ -73,3 +73,52 @@ class HospitalSystem:
                 self.prescriptions_stack.append(appointment)
                 return True
         return False
+        def get_waiting_queue(self):
+        return [patient.name for patient in self.waiting_queue]
+
+    def process_next_patient(self):
+        if self.waiting_queue:
+            patient = self.waiting_queue.pop(0)
+            return patient
+        return None
+
+    def get_appointments_with_prescriptions(self):
+        results = []
+        for appointment in self.prescriptions_stack:
+            patient_name = next((patient.name for patient in self.patients if patient.patient_id == appointment.patient_id), "Unknown")
+            doctor_name = next((doctor.name for doctor in self.doctors if doctor.doctor_id == appointment.doctor_id), "Unknown")
+            prescription = "Pending" if not appointment.prescription else appointment.prescription
+            results.append(f"Patient: {patient_name}, Doctor: {doctor_name}, Prescription: {prescription}")
+        return results
+
+initial_patients_data = [
+    (101, "John Doe", "Fever", "2024-03-15"),
+    (102, "Alice Smith", "Broken Arm", "2024-03-17"),
+    (103, "Bob Johnson", "Flu", "2024-03-20"),
+    (104, "Emily Brown", "Migraine", "2024-03-22"),
+    (105, "David Wilson", "Diabetes", "2024-03-25")
+]
+
+class HospitalSystemGUI:
+    def __init__(self, root):
+        self.root = root
+        self.hospital_system = HospitalSystem()
+        for data in initial_patients_data:
+            patient = Patient(*data)
+            self.hospital_system.add_patient(patient)
+        self.root.title("Hospital Management System")
+        self.root.geometry("500x500")
+
+        tk.Button(self.root, text="Process Next Patient", command=self.process_next_patient).pack(fill=tk.X)
+
+        self.queue_frame = tk.LabelFrame(self.root, text="Waiting Queue")
+        self.queue_frame.pack(pady=10)
+        self.queue_listbox = tk.Listbox(self.queue_frame, width=50)
+        self.queue_listbox.pack()
+        self.update_queue_listbox()
+
+        tk.Button(self.root, text="Add New Patient", command=self.add_patient_window).pack(fill=tk.X)
+        tk.Button(self.root, text="Remove Patient", command=self.remove_patient).pack(fill=tk.X)
+        tk.Button(self.root, text="Schedule Appointment", command=self.schedule_appointment_window).pack(fill=tk.X)
+        tk.Button(self.root, text="Issue Prescription", command=self.issue_prescription_window).pack(fill=tk.X)
+        tk.Button(self.root, text="View Appointments", command=self.view_appointments_window).pack(fill=tk.X)
