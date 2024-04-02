@@ -316,3 +316,24 @@ class HospitalSystemGUI:
         for patient in patients_sorted_by_admission:
             Label(records_win,
                   text=f"ID: {patient.patient_id}, Name: {patient.name}, Condition: {patient.medical_condition}, Admission Date: {patient.admission_date}").pack()
+        def view_appointments_queue(self):
+        queue_win = Toplevel(self.master)
+        queue_win.title("Appointments Queue")
+        Label(queue_win, text="All Appointments:").pack()
+        for appt in sorted(self.hospital_system.appointments, key=lambda x: x.appointment_date):
+            patient = self.hospital_system.patients[appt.patient_id]
+            doctor = self.hospital_system.doctors[appt.doctor_id]
+            Label(queue_win,
+                  text=f"Patient ID: {appt.patient_id}, Name: {patient.name}, Doctor: {doctor.name}, Date: {appt.appointment_date}").pack()
+    def clear_window(self):
+        for widget in self.master.winfo_children():
+            widget.destroy()
+
+def main():
+    root = tk.Tk()
+    app = HospitalSystemGUI(root)
+    root.mainloop()
+
+if __name__ == "__main__":
+    main()
+
