@@ -155,3 +155,33 @@ class HospitalSystemGUI:
         tk.Button(self.master, text="View Prescriptions Record", command=self.view_prescriptions_record).pack()
         tk.Button(self.master, text="Update Patient Details", command=self.update_patient_window).pack()
         tk.Button(self.master, text="Back to Login", command=self.create_login_window).pack()
+    def consult_next_patient(self):
+        if self.hospital_system.appointments:
+            next_appointment = self.hospital_system.appointments.popleft()
+            patient = self.hospital_system.patients[next_appointment.patient_id]  # Retrieve the patient object
+            prescription = simpledialog.askstring("Prescription", f"Enter {patient.name}'s prescription:")
+            if prescription:
+                next_appointment.prescription = prescription
+                self.hospital_system.prescriptions_stack.append(next_appointment)
+                messagebox.showinfo("Consultation", f"{patient.name} consulted and prescription added.")
+            else:
+                messagebox.showinfo("Consultation", "No prescription provided. Patient requeued.")
+                self.hospital_system.appointments.appendleft(next_appointment)  # Requeue if no prescription
+        else:
+            messagebox.showinfo("Queue Empty", "No more patients in the queue.")
+        self.doctor_view()  # Refresh the view
+
+    def view_prescriptions_record(self):
+        prescriptions_win = Toplevel(self.master)
+        prescriptions_win.title("Prescriptions Record")
+        for appt in reversed(self.hospital_system.prescriptions_stack):  # Use reversed to mimic stack behavior
+            patient = self.hospital_system.patients[appt.patient_id]
+            Label(prescriptions_win, text=f"Patient: {patient.name}, Prescription: {appt.prescription}").pack()
+    def consult_patient(self, appointment):
+        prescription = simpledialog.askstring("Prescription", f"Enter prescription for patient ID {appointment.patient_id}:")
+        if prescription:
+            appointment.prescription = prescription
+            self.hospital_system.prescriptions_stack.append(appointment)
+            self.hospital_system.appointments.remove(appointment)
+            messagebox.showinfo("Success", "Prescription added and patient removed from queue.")
+            self.doctor_view()
