@@ -251,3 +251,68 @@ class HospitalSystemGUI:
                 messagebox.showerror("Error", "Patient ID does not exist.", parent=window)
         except ValueError as e:
             messagebox.showerror("Error", "Invalid input: " + str(e), parent=window)
+    def remove_patient_window(self):
+        remove_win = Toplevel(self.master)
+        remove_win.title("Remove Patient")
+        Label(remove_win, text="Patient ID:").grid(row=0, column=0)
+        patient_id_entry = Entry(remove_win)
+        patient_id_entry.grid(row=0, column=1)
+        Button(remove_win, text="Remove",
+               command=lambda: self.attempt_remove_patient(patient_id_entry.get(), remove_win)).grid(row=1, column=0,
+                                                                                                     columnspan=2)
+
+    def update_patient_window(self):
+        update_win = Toplevel(self.master)
+        update_win.title("Update Patient Record")
+
+        Label(update_win, text="Patient ID:").grid(row=0, column=0)
+        patient_id_entry = Entry(update_win)
+        patient_id_entry.grid(row=0, column=1)
+
+        Label(update_win, text="New Name:").grid(row=1, column=0)
+        name_entry = Entry(update_win)
+        name_entry.grid(row=1, column=1)
+
+        Label(update_win, text="New Condition:").grid(row=2, column=0)
+        condition_entry = Entry(update_win)
+        condition_entry.grid(row=2, column=1)
+
+        Label(update_win, text="New Admission Date (YYYY-MM-DD):").grid(row=3, column=0)
+        admission_date_entry = Entry(update_win)
+        admission_date_entry.grid(row=3, column=1)
+
+        Button(update_win, text="Update", command=lambda: self.submit_patient_update(
+            patient_id_entry.get(), name_entry.get(), condition_entry.get(), admission_date_entry.get())).grid(row=4,
+                                                                                                               column=0,
+                                                                                                               columnspan=2)
+
+    def submit_patient_update(self, patient_id, name, condition, admission_date):
+        updated = self.hospital_system.update_patient_record(int(patient_id), name if name else None,
+                                                             condition if condition else None,
+                                                             admission_date if admission_date else None)
+        if updated:
+            messagebox.showinfo("Success", "Patient record updated successfully.")
+        else:
+            messagebox.showerror("Error", "Failed to update patient record.")
+
+
+    def attempt_remove_patient(self, patient_id_str, window):
+        try:
+            patient_id = int(patient_id_str)
+            removed = self.hospital_system.remove_appointment_by_patient_id(patient_id)
+            if removed:
+                messagebox.showinfo("Success", "Patient removed from the appointment queue successfully.",
+                                    parent=window)
+            else:
+                messagebox.showerror("Error", "Appointment for the given patient ID not found.", parent=window)
+            window.destroy()
+        except ValueError:
+            messagebox.showerror("Error", "Invalid patient ID.", parent=window)
+
+    def view_patient_records(self):
+        records_win = Toplevel(self.master)
+        records_win.title("Patient Records")
+        patients_sorted_by_admission = sorted(self.hospital_system.patients.values(), key=lambda x: x.admission_date)
+        for patient in patients_sorted_by_admission:
+            Label(records_win,
+                  text=f"ID: {patient.patient_id}, Name: {patient.name}, Condition: {patient.medical_condition}, Admission Date: {patient.admission_date}").pack()
