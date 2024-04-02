@@ -22,82 +22,88 @@ class Appointment:
 
 class HospitalSystem:
     def __init__(self):
-        self.patients = []
-        self.waiting_queue = []
-        self.prescriptions_stack = []
-        self.appointments = []
-        self.doctors = [
-            Doctor(1, "Dr. Smith"),
-            Doctor(2, "Dr. Johnson"),
-            Doctor(3, "Dr. Wilson")
+        self.patients = {}
+        self.doctors = {1: Doctor(1, "Dr. Smith", "Cardiology"), 2: Doctor(2, "Dr. Johnson", "Neurology"), 3: Doctor(3, "Dr. Wilson", "General Medicine")}
+        self.appointments = deque()  # Using a deque as a queue for appointments
+        self.prescriptions_stack = []  # Using a list as a stack for prescriptions
+        self.add_initial_data()
+    def add_initial_data(self):
+        initial_patients = [
+            ("Alice", "Flu", "2023-04-01", 1, "2023-04-02"),
+            ("Bob", "Cold", "2023-04-01", 2, "2023-04-03"),
+            ("Charlie", "Fever", "2023-04-02", 3, "2023-04-03"),
+            ("Diana", "Injury", "2023-04-02", 1, "2023-04-04"),
+            ("Ethan", "Checkup", "2023-04-03", 2, "2023-04-05"),
         ]
+        for patient_id, (name, condition, admission_date, doctor_id, appointment_date) in enumerate(initial_patients, start=1):
+            self.add_patient(name, condition, admission_date, doctor_id, appointment_date, patient_id)
+            self.schedule_appointment(patient_id, doctor_id, appointment_date)  # Schedules their appointment
 
-    def add_patient(self, patient):
-        # Check if a patient with the given ID already exists
-        for existing_patient in self.patients:
-            if existing_patient.patient_id == patient.patient_id:
-                return False
-        self.patients.append(patient)
-        self.waiting_queue.append(patient)
-        return True
+    def add_initial_data(self):
+        initial_data = [("Alice", "Flu", "2023-04-01"), ("Bob", "Cold", "2023-04-02"), ("Charlie", "Fever", "2023-04-03"), ("Diana", "Injury", "2023-04-04"), ("Ethan", "Checkup", "2023-04-05")]
+        for patient_id, (name, condition, admission_date) in enumerate(initial_data, start=1):
+            self.patients[patient_id] = Patient(patient_id, name, condition, admission_date)
+
+    def consult_next_patient(self, doctor_id):
+        for i, appt in enumerate(self.appointments):
+            if appt.doctor_id == doctor_id and appt.prescription is None:
+                return self.appointments.pop(i)
+        return None
+
+    def add_patient(self, name, condition, admission_date):
+        patient_id = max(self.patients.keys(), default=0) + 1
+        self.patients[patient_id] = Patient(patient_id, name, condition, admission_date)
+        messagebox.showinfo("Success", f"Patient {name} added successfully.")
+
+    def schedule_appointment(self, patient_id, doctor_id, appointment_date):
+        if patient_id in self.patients and doctor_id in self.doctors:
+            new_appointment = Appointment(patient_id, doctor_id, appointment_date)
+            self.appointments.append(new_appointment)
+            messagebox.showinfo("Success", "Appointment scheduled successfully.")
+        else:
+            messagebox.showerror("Error", "Patient or Doctor ID not found.")
+
+    def issue_prescription(self, patient_id, prescription):
+        for appointment in self.appointments:
+            if appointment.patient_id == patient_id and appointment.prescription is None:
+                appointment.prescription = prescription
+                self.prescriptions_stack.append(appointment)
+                self.appointments = [appt for appt in self.appointments if appt.patient_id != patient_id]
+                messagebox.showinfo("Success", f"Prescription issued for patient ID {patient_id}.")
+                return
+        messagebox.showerror("Error", "Appointment not found or prescription already issued.")
+            def get_patient_records(self):
+        sorted_patients = sorted(self.patients.values(), key=lambda x: x.admission_date)
+        return sorted_patients
 
     def remove_patient(self, patient_id):
-        patient_to_remove = None
-        for patient in self.patients:
-            if patient.patient_id == patient_id:
-                patient_to_remove = patient
-                break
-        if patient_to_remove:
-            self.patients.remove(patient_to_remove)
-            try:
-                self.waiting_queue.remove(patient_to_remove)
-            except ValueError:
-                pass
+        if patient_id in self.patients:
+            del self.patients[patient_id]
+            self.appointments = [appt for appt in self.appointments if appt.patient_id != patient_id]
+            messagebox.showinfo("Success", "Patient removed successfully.")
+        else:
+            messagebox.showerror("Error", "Patient ID not found.")
+
+    def remove_appointment_by_patient_id(self, patient_id):
+        # Find and remove the first appointment for the given patient ID
+        for i, appointment in enumerate(self.appointments):
+            if appointment.patient_id == patient_id:
+                del self.appointments[i]
+                return True
+        return False
+
+    def update_patient_record(self, patient_id, name=None, medical_condition=None, admission_date=None):
+        patient = self.patients.get(patient_id)
+        if patient:
+            if name:
+                patient.name = name
+            if medical_condition:
+                patient.medical_condition = medical_condition
+            if admission_date:
+                patient.admission_date = datetime.datetime.strptime(admission_date, "%Y-%m-%d").date()
             return True
         return False
 
-    def schedule_appointment(self, patient_id, doctor_id):
-        for patient in self.patients:
-            if patient.patient_id == patient_id:
-                doctor = next((doc for doc in self.doctors if doc.doctor_id == doctor_id), None)
-                if doctor:
-                    appointment = Appointment(patient_id, doctor_id, f"Patient: {patient.name}, Doctor: {doctor.name}")
-                    self.appointments.append(appointment)
-                    return f"Appointment Scheduled: {appointment.details}"
-        return "Patient or doctor not found"
-
-    def issue_prescription(self, patient_id, medication):
-        for appointment in self.appointments:
-            if appointment.patient_id == patient_id and not appointment.prescription:
-                appointment.prescription = medication
-                self.prescriptions_stack.append(appointment)
-                return True
-        return False
-        def get_waiting_queue(self):
-        return [patient.name for patient in self.waiting_queue]
-
-    def process_next_patient(self):
-        if self.waiting_queue:
-            patient = self.waiting_queue.pop(0)
-            return patient
-        return None
-
-    def get_appointments_with_prescriptions(self):
-        results = []
-        for appointment in self.prescriptions_stack:
-            patient_name = next((patient.name for patient in self.patients if patient.patient_id == appointment.patient_id), "Unknown")
-            doctor_name = next((doctor.name for doctor in self.doctors if doctor.doctor_id == appointment.doctor_id), "Unknown")
-            prescription = "Pending" if not appointment.prescription else appointment.prescription
-            results.append(f"Patient: {patient_name}, Doctor: {doctor_name}, Prescription: {prescription}")
-        return results
-
-initial_patients_data = [
-    (101, "John Doe", "Fever", "2024-03-15"),
-    (102, "Alice Smith", "Broken Arm", "2024-03-17"),
-    (103, "Bob Johnson", "Flu", "2024-03-20"),
-    (104, "Emily Brown", "Migraine", "2024-03-22"),
-    (105, "David Wilson", "Diabetes", "2024-03-25")
-]
 
 class HospitalSystemGUI:
     def __init__(self, root):
