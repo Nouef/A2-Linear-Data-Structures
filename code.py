@@ -222,3 +222,32 @@ class HospitalSystemGUI:
         except Exception as e:
             messagebox.showerror("Error", str(e))
             
+    def schedule_appointment_window(self):
+        appt_win = Toplevel(self.master)
+        appt_win.title("Schedule Appointment")
+        Label(appt_win, text="Patient ID:").grid(row=0, column=0)
+        patient_id_entry = Entry(appt_win)
+        patient_id_entry.grid(row=0, column=1)
+        Label(appt_win, text="Doctor ID:").grid(row=1, column=0)
+        doctor_id_entry = Entry(appt_win)
+        doctor_id_entry.grid(row=1, column=1)
+        Label(appt_win, text="Appointment Date (YYYY-MM-DD):").grid(row=2, column=0)
+        appointment_date_entry = Entry(appt_win)
+        appointment_date_entry.grid(row=2, column=1)
+        Button(appt_win, text="Schedule",
+               command=lambda: self.schedule_appointment(patient_id_entry.get(), doctor_id_entry.get(),
+                                                         appointment_date_entry.get(), appt_win)).grid(row=3, column=0,
+                                                                                                       columnspan=2)
+
+    def schedule_appointment(self, patient_id_str, doctor_id_str, appointment_date, window):
+        try:
+            patient_id = int(patient_id_str)
+            doctor_id = int(doctor_id_str)
+            if patient_id in self.hospital_system.patients:
+                self.hospital_system.schedule_appointment(patient_id, doctor_id, appointment_date)
+                messagebox.showinfo("Success", "Appointment scheduled successfully.", parent=window)
+                window.destroy()
+            else:
+                messagebox.showerror("Error", "Patient ID does not exist.", parent=window)
+        except ValueError as e:
+            messagebox.showerror("Error", "Invalid input: " + str(e), parent=window)
