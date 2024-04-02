@@ -1,48 +1,47 @@
 import tkinter as tk
-from tkinter import messagebox, simpledialog
+from tkinter import messagebox, simpledialog, Toplevel, Label, Entry, Button, Listbox
+import datetime
+from collections import deque
 
 class Patient:
     def __init__(self, patient_id, name, medical_condition, admission_date):
         self.patient_id = patient_id
         self.name = name
         self.medical_condition = medical_condition
-        self.admission_date = admission_date
+        self.admission_date = datetime.datetime.strptime(admission_date, "%Y-%m-%d").date()
 
 class Doctor:
-    def __init__(self, doctor_id, name):
+    def __init__(self, doctor_id, name, specialization):
         self.doctor_id = doctor_id
         self.name = name
+        self.specialization = specialization
 
 class Appointment:
-    def __init__(self, patient_id, doctor_id, details):
+    def __init__(self, patient_id, doctor_id, appointment_date):
         self.patient_id = patient_id
         self.doctor_id = doctor_id
-        self.details = details
+        self.appointment_date = datetime.datetime.strptime(appointment_date, "%Y-%m-%d").date()
         self.prescription = None
 
 class HospitalSystem:
     def __init__(self):
         self.patients = {}
-        self.doctors = {1: Doctor(1, "Dr. Smith", "Cardiology"), 2: Doctor(2, "Dr. Johnson", "Neurology"), 3: Doctor(3, "Dr. Wilson", "General Medicine")}
+        self.doctors = {1: Doctor(1, "Dr. Jamal", "Cardiology"), 2: Doctor(2, "Dr. Ray", "Neurology"), 3: Doctor(3, "Dr. Wilson", "General Medicine")}
         self.appointments = deque()  # Using a deque as a queue for appointments
         self.prescriptions_stack = []  # Using a list as a stack for prescriptions
         self.add_initial_data()
-    def add_initial_data(self):
-        initial_patients = [
-            ("Alice", "Flu", "2023-04-01", 1, "2023-04-02"),
-            ("Bob", "Cold", "2023-04-01", 2, "2023-04-03"),
-            ("Charlie", "Fever", "2023-04-02", 3, "2023-04-03"),
-            ("Diana", "Injury", "2023-04-02", 1, "2023-04-04"),
-            ("Ethan", "Checkup", "2023-04-03", 2, "2023-04-05"),
-        ]
-        for patient_id, (name, condition, admission_date, doctor_id, appointment_date) in enumerate(initial_patients, start=1):
-            self.add_patient(name, condition, admission_date, doctor_id, appointment_date, patient_id)
-            self.schedule_appointment(patient_id, doctor_id, appointment_date)  # Schedules their appointment
 
     def add_initial_data(self):
-        initial_data = [("Alice", "Flu", "2023-04-01"), ("Bob", "Cold", "2023-04-02"), ("Charlie", "Fever", "2023-04-03"), ("Diana", "Injury", "2023-04-04"), ("Ethan", "Checkup", "2023-04-05")]
-        for patient_id, (name, condition, admission_date) in enumerate(initial_data, start=1):
-            self.patients[patient_id] = Patient(patient_id, name, condition, admission_date)
+        initial_patients = [
+            ("Sara", "Flu", "2023-04-01", 1, "2023-04-02"),
+            ("Ahmed", "Cold", "2024-04-01", 2, "2024-04-03"),
+            ("Ali", "Fever", "2024-04-02", 3, "2024-04-03"),
+            ("Diana", "Injury", "2024-04-02", 1, "2024-04-04"),
+            ("Ethan", "Checkup", "2024-04-03", 2, "2024-04-05"),
+        ]
+        for name, condition, admission_date, doctor_id, appointment_date in initial_patients:
+            patient_id = self.add_patient(name, condition, admission_date)
+            self.schedule_appointment(patient_id, doctor_id, appointment_date)
 
     def consult_next_patient(self, doctor_id):
         for i, appt in enumerate(self.appointments):
@@ -53,13 +52,11 @@ class HospitalSystem:
     def add_patient(self, name, condition, admission_date):
         patient_id = max(self.patients.keys(), default=0) + 1
         self.patients[patient_id] = Patient(patient_id, name, condition, admission_date)
-        messagebox.showinfo("Success", f"Patient {name} added successfully.")
-
+        return patient_id
     def schedule_appointment(self, patient_id, doctor_id, appointment_date):
         if patient_id in self.patients and doctor_id in self.doctors:
             new_appointment = Appointment(patient_id, doctor_id, appointment_date)
             self.appointments.append(new_appointment)
-            messagebox.showinfo("Success", "Appointment scheduled successfully.")
         else:
             messagebox.showerror("Error", "Patient or Doctor ID not found.")
 
@@ -72,7 +69,8 @@ class HospitalSystem:
                 messagebox.showinfo("Success", f"Prescription issued for patient ID {patient_id}.")
                 return
         messagebox.showerror("Error", "Appointment not found or prescription already issued.")
-            def get_patient_records(self):
+
+    def get_patient_records(self):
         sorted_patients = sorted(self.patients.values(), key=lambda x: x.admission_date)
         return sorted_patients
 
@@ -103,13 +101,14 @@ class HospitalSystem:
                 patient.admission_date = datetime.datetime.strptime(admission_date, "%Y-%m-%d").date()
             return True
         return False
+
+
 class LoginSystem:
     def __init__(self):
         self.users = {"doctor1": "pass", "doctor2": "pass", "doctor3": "pass", "reception": "pass"}
 
     def verify_user(self, username, password):
         return self.users.get(username) == password
-
 
 class HospitalSystemGUI:
     def __init__(self, master):
@@ -155,6 +154,7 @@ class HospitalSystemGUI:
         tk.Button(self.master, text="View Prescriptions Record", command=self.view_prescriptions_record).pack()
         tk.Button(self.master, text="Update Patient Details", command=self.update_patient_window).pack()
         tk.Button(self.master, text="Back to Login", command=self.create_login_window).pack()
+
     def consult_next_patient(self):
         if self.hospital_system.appointments:
             next_appointment = self.hospital_system.appointments.popleft()
@@ -185,6 +185,7 @@ class HospitalSystemGUI:
             self.hospital_system.appointments.remove(appointment)
             messagebox.showinfo("Success", "Prescription added and patient removed from queue.")
             self.doctor_view()
+
     def receptionist_view(self):
         self.clear_window()
         tk.Button(self.master, text="Add New Patient", command=self.add_patient_window).pack()
@@ -221,7 +222,7 @@ class HospitalSystemGUI:
             window.destroy()
         except Exception as e:
             messagebox.showerror("Error", str(e))
-            
+
     def schedule_appointment_window(self):
         appt_win = Toplevel(self.master)
         appt_win.title("Schedule Appointment")
@@ -251,6 +252,7 @@ class HospitalSystemGUI:
                 messagebox.showerror("Error", "Patient ID does not exist.", parent=window)
         except ValueError as e:
             messagebox.showerror("Error", "Invalid input: " + str(e), parent=window)
+
     def remove_patient_window(self):
         remove_win = Toplevel(self.master)
         remove_win.title("Remove Patient")
@@ -316,7 +318,8 @@ class HospitalSystemGUI:
         for patient in patients_sorted_by_admission:
             Label(records_win,
                   text=f"ID: {patient.patient_id}, Name: {patient.name}, Condition: {patient.medical_condition}, Admission Date: {patient.admission_date}").pack()
-        def view_appointments_queue(self):
+
+    def view_appointments_queue(self):
         queue_win = Toplevel(self.master)
         queue_win.title("Appointments Queue")
         Label(queue_win, text="All Appointments:").pack()
