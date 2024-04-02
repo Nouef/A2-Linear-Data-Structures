@@ -185,3 +185,40 @@ class HospitalSystemGUI:
             self.hospital_system.appointments.remove(appointment)
             messagebox.showinfo("Success", "Prescription added and patient removed from queue.")
             self.doctor_view()
+    def receptionist_view(self):
+        self.clear_window()
+        tk.Button(self.master, text="Add New Patient", command=self.add_patient_window).pack()
+        tk.Button(self.master, text="Remove Patient", command=self.remove_patient_window).pack()
+        tk.Button(self.master, text="Update Patient Details", command=self.update_patient_window).pack()
+        tk.Button(self.master, text="Schedule Appointment", command=self.schedule_appointment_window).pack()
+        tk.Button(self.master, text="View Patient Records", command=self.view_patient_records).pack()
+        tk.Button(self.master, text="View Appointments Queue", command=self.view_appointments_queue).pack()
+        tk.Button(self.master, text="Back to Login", command=self.create_login_window).pack(side=tk.BOTTOM)
+
+    def add_patient_window(self):
+        add_win = tk.Toplevel(self.master)
+        add_win.title("Add New Patient")
+
+        tk.Label(add_win, text="Name:").grid(row=0, column=0)
+        name_entry = tk.Entry(add_win)
+        name_entry.grid(row=0, column=1)
+
+        tk.Label(add_win, text="Medical Condition:").grid(row=1, column=0)
+        condition_entry = tk.Entry(add_win)
+        condition_entry.grid(row=1, column=1)
+
+        tk.Label(add_win, text="Admission Date (YYYY-MM-DD):").grid(row=2, column=0)
+        admission_date_entry = tk.Entry(add_win)
+        admission_date_entry.grid(row=2, column=1)
+
+        tk.Button(add_win, text="Submit", command=lambda: self.submit_new_patient(
+            name_entry.get(), condition_entry.get(), admission_date_entry.get(), add_win
+        )).grid(row=3, column=0, columnspan=2)
+
+    def submit_new_patient(self, name, condition, admission_date, window):
+        try:
+            self.hospital_system.add_patient(name, condition, admission_date)
+            window.destroy()
+        except Exception as e:
+            messagebox.showerror("Error", str(e))
+            
