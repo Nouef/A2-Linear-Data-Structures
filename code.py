@@ -103,28 +103,55 @@ class HospitalSystem:
                 patient.admission_date = datetime.datetime.strptime(admission_date, "%Y-%m-%d").date()
             return True
         return False
+class LoginSystem:
+    def __init__(self):
+        self.users = {"doctor1": "pass", "doctor2": "pass", "doctor3": "pass", "reception": "pass"}
+
+    def verify_user(self, username, password):
+        return self.users.get(username) == password
 
 
 class HospitalSystemGUI:
-    def __init__(self, root):
-        self.root = root
+    def __init__(self, master):
+        self.master = master
+        self.master.title("Hospital Management System")
         self.hospital_system = HospitalSystem()
-        for data in initial_patients_data:
-            patient = Patient(*data)
-            self.hospital_system.add_patient(patient)
-        self.root.title("Hospital Management System")
-        self.root.geometry("500x500")
+        self.login_system = LoginSystem()
+        self.current_user = None
+        self.create_login_window()
 
-        tk.Button(self.root, text="Process Next Patient", command=self.process_next_patient).pack(fill=tk.X)
 
-        self.queue_frame = tk.LabelFrame(self.root, text="Waiting Queue")
-        self.queue_frame.pack(pady=10)
-        self.queue_listbox = tk.Listbox(self.queue_frame, width=50)
-        self.queue_listbox.pack()
-        self.update_queue_listbox()
+    def create_login_window(self):
+        self.clear_window()
+        tk.Label(self.master, text="Username:").pack()
+        username_entry = tk.Entry(self.master)
+        username_entry.pack()
 
-        tk.Button(self.root, text="Add New Patient", command=self.add_patient_window).pack(fill=tk.X)
-        tk.Button(self.root, text="Remove Patient", command=self.remove_patient).pack(fill=tk.X)
-        tk.Button(self.root, text="Schedule Appointment", command=self.schedule_appointment_window).pack(fill=tk.X)
-        tk.Button(self.root, text="Issue Prescription", command=self.issue_prescription_window).pack(fill=tk.X)
-        tk.Button(self.root, text="View Appointments", command=self.view_appointments_window).pack(fill=tk.X)
+        tk.Label(self.master, text="Password:").pack()
+        password_entry = tk.Entry(self.master, show="*")
+        password_entry.pack()
+
+        tk.Button(self.master, text="Login", command=lambda: self.login(username_entry.get(), password_entry.get())).pack()
+
+    def login(self, username, password):
+        if self.login_system.verify_user(username, password):
+            self.current_user = username
+            self.create_main_window()
+        else:
+            messagebox.showerror("Login Failed", "Incorrect username or password")
+
+    def create_main_window(self):
+        self.clear_window()
+        if "doctor" in self.current_user:
+            self.doctor_view()
+        else:
+            self.receptionist_view()
+
+    def doctor_view(self):
+        self.clear_window()
+        doctor_id = int(self.current_user[-1])
+        tk.Label(self.master, text=f"Doctor {doctor_id}'s Patients:").pack()
+        tk.Button(self.master, text="Consult Next Patient", command=self.consult_next_patient).pack()
+        tk.Button(self.master, text="View Prescriptions Record", command=self.view_prescriptions_record).pack()
+        tk.Button(self.master, text="Update Patient Details", command=self.update_patient_window).pack()
+        tk.Button(self.master, text="Back to Login", command=self.create_login_window).pack()
